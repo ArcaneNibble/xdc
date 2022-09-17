@@ -1,5 +1,9 @@
+#![no_std]
+extern crate alloc;
+extern crate std;
+use std::println;
+
 use xdc::*;
-use xdc_macros::*;
 
 #[xdc_trait]
 trait HasId {
@@ -49,6 +53,8 @@ impl HasColor for Point {
 }
 
 fn main() {
+    use alloc::boxed::Box;
+
     {
         let test = Point { id: 123, x: 1, y: 2, col:3};
         let test_as_haslocation: &dyn HasLocation = &test;

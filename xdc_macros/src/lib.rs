@@ -69,7 +69,7 @@ pub fn xdc_struct(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream
             fn to_base_mut(self: &mut Self) -> &mut dyn ::xdc::ObjBase {
                 self
             }
-            fn to_base_boxed(self: Box<Self>) -> Box<dyn ::xdc::ObjBase> {
+            fn to_base_boxed(self: ::alloc::boxed::Box<Self>) -> ::alloc::boxed::Box<dyn ::xdc::ObjBase> {
                 self
             }
 

@@ -8,4 +8,3 @@ edition = "2021"
 [dependencies]
 linkme = "0.3"
 xdc = { path = "../xdc" }
-xdc_macros = { path = "../xdc_macros" }
