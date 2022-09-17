@@ -39,7 +39,7 @@ unsafe impl Sync for MetadataEntry {}
 macro_rules! metadata_entry {
     ($type:ty, $trait:path) => {
         MetadataEntry {
-            typeid: type_id::<dyn $trait>(),
+            typeid: ::xdc::type_id::<dyn $trait>(),
             vtable: unsafe {
                 ::core::mem::transmute::<*const dyn $trait, ::xdc::FatPointer>(
                     ::core::mem::MaybeUninit::<$type>::uninit().as_ptr() as *const dyn $trait,
