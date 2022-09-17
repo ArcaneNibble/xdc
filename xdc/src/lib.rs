@@ -1,3 +1,7 @@
+#![no_std]
+extern crate alloc;
+use alloc::boxed::Box;
+
 #[repr(C)]
 pub struct FatPointer {
     pub data: *const u8,
