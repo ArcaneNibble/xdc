@@ -80,7 +80,7 @@ pub fn xdc_struct(
             }
         }
     } else {
-        quote!{}
+        quote! {}
     };
 
     let output = quote! {
