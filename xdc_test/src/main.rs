@@ -12,10 +12,11 @@ trait HasLocation : HasId {
 }
 
 #[xdc_trait]
-trait HasColor : HasId + xdc::ObjBase {
+trait HasColor : HasId {
     fn color(&self) -> u32;
 }
 
+#[xdc_struct]
 struct Point {
     id: u32,
     x: u32,
@@ -23,29 +24,7 @@ struct Point {
     col: u32
 }
 
-const POINT_METADATA: &'static [(u64, *const u8)] = &[
-    metadata_entry!(Point, xdc::ObjBase),
-    metadata_entry!(Point, HasId),
-    metadata_entry!(Point, HasLocation),
-    metadata_entry!(Point, HasColor),
-];
-
-impl xdc::ObjBase for Point {
-    fn to_base(self: &Self) -> &dyn ObjBase {
-        self
-    }
-    fn to_base_mut(self: &mut Self) -> &mut dyn ObjBase {
-        self
-    }
-    fn to_base_boxed(self: Box<Self>) -> Box<dyn ObjBase> {
-        self
-    }
-
-    fn get_metadata(&self) -> &'static [(u64, *const u8)] {
-        POINT_METADATA
-    }
-}
-
+#[xdc_impl]
 impl HasId for Point {
     fn id(&self) -> u32 {
         println!("getting id {}", self.id);
@@ -53,6 +32,7 @@ impl HasId for Point {
     }
 }
 
+#[xdc_impl]
 impl HasLocation for Point {
     fn location(&self) -> (u32, u32) {
         println!("getting location {} {}", self.x, self.y);
@@ -60,6 +40,7 @@ impl HasLocation for Point {
     }
 }
 
+#[xdc_impl]
 impl HasColor for Point {
     fn color(&self) -> u32 {
         println!("getting color {}", self.col);

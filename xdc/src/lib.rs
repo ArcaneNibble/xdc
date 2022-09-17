@@ -17,22 +17,29 @@ pub trait ObjBase {
     fn to_base(self: &Self) -> &dyn ObjBase;
     fn to_base_mut(self: &mut Self) -> &mut dyn ObjBase;
     fn to_base_boxed(self: Box<Self>) -> Box<dyn ObjBase>;
-    fn get_metadata(&self) -> &'static [(u64, *const u8)];
+    fn get_metadata(&self) -> &'static [MetadataEntry];
 }
 impl TypeId for dyn ObjBase {
     const TYPEID: u64 = 0;
 }
 
 
+pub struct MetadataEntry {
+    pub typeid: u64,
+    pub vtable: *const u8,
+}
+unsafe impl Sync for MetadataEntry {}
+
 #[macro_export]
 macro_rules! metadata_entry {
     ($type:ty, $trait:path) => {
-        (type_id::<dyn $trait>(), {
-            unsafe {
+        MetadataEntry {
+            typeid: type_id::<dyn $trait>(),
+            vtable: unsafe {
                 ::core::mem::transmute::<*const dyn $trait, ::xdc::FatPointer>(
                     ::core::mem::MaybeUninit::<$type>::uninit().as_ptr() as *const dyn $trait).vtable
             }
-        })
+        }
     }
 }
 
@@ -43,8 +50,8 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
 
     let meta = from.get_metadata();
     for meta_ent in meta {
-        if meta_ent.0 == typeid {
-            vtable = meta_ent.1;
+        if meta_ent.typeid == typeid {
+            vtable = meta_ent.vtable;
             break;
         }
     }
@@ -79,8 +86,8 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
 
     let meta = from.get_metadata();
     for meta_ent in meta {
-        if meta_ent.0 == typeid {
-            vtable = meta_ent.1;
+        if meta_ent.typeid == typeid {
+            vtable = meta_ent.vtable;
             break;
         }
     }
@@ -115,8 +122,8 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) 
 
     let meta = from.get_metadata();
     for meta_ent in meta {
-        if meta_ent.0 == typeid {
-            vtable = meta_ent.1;
+        if meta_ent.typeid == typeid {
+            vtable = meta_ent.vtable;
             break;
         }
     }
