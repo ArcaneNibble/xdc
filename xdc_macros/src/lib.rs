@@ -6,6 +6,16 @@ use syn::{Ident, ItemImpl, ItemStruct, ItemTrait, PathArguments, Type, TypeParam
 
 static NEXT_UID: AtomicU64 = AtomicU64::new(1);
 
+#[cfg(feature = "alloc")]
+fn alloc_is_enabled() -> bool {
+    true
+}
+
+#[cfg(not(feature = "alloc"))]
+fn alloc_is_enabled() -> bool {
+    false
+}
+
 #[proc_macro_attribute]
 #[proc_macro_error]
 pub fn xdc_trait(
@@ -63,6 +73,16 @@ pub fn xdc_struct(
         struct_id.span(),
     );
 
+    let alloc_impl = if alloc_is_enabled() {
+        quote! {
+            fn to_base_boxed(self: ::alloc::boxed::Box<Self>) -> ::alloc::boxed::Box<dyn ::xdc::ObjBase> {
+                self
+            }
+        }
+    } else {
+        quote!{}
+    };
+
     let output = quote! {
         #input_parsed
 
@@ -81,9 +101,7 @@ pub fn xdc_struct(
             fn to_base_mut(self: &mut Self) -> &mut dyn ::xdc::ObjBase {
                 self
             }
-            fn to_base_boxed(self: ::alloc::boxed::Box<Self>) -> ::alloc::boxed::Box<dyn ::xdc::ObjBase> {
-                self
-            }
+            #alloc_impl
 
             fn get_metadata(&self) -> &'static [::xdc::MetadataEntry] {
                 &#meta_id

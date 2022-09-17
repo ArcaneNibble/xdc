@@ -6,4 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xdc_macros = { path = "../xdc_macros" }
+xdc_macros = { path = "../xdc_macros", default-features = false }
+
+[features]
+default = ["alloc"]
+alloc = ["xdc_macros/alloc"]

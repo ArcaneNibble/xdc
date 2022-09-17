@@ -1,5 +1,8 @@
 #![no_std]
+
+#[cfg(feature = "alloc")]
 extern crate alloc;
+#[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
 #[repr(C)]
@@ -18,6 +21,7 @@ pub const fn type_id<T: TypeId + ?Sized>() -> u64 {
 pub trait ObjBase {
     fn to_base(self: &Self) -> &dyn ObjBase;
     fn to_base_mut(self: &mut Self) -> &mut dyn ObjBase;
+    #[cfg(feature = "alloc")]
     fn to_base_boxed(self: Box<Self>) -> Box<dyn ObjBase>;
     fn get_metadata(&self) -> &'static [MetadataEntry];
 }
@@ -102,6 +106,7 @@ macro_rules! try_cast_mut {
     }};
 }
 
+#[cfg(feature = "alloc")]
 pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) -> Option<Box<T>> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
@@ -122,6 +127,7 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) 
         Some(Box::from_raw(new_trait_ptr))
     }
 }
+#[cfg(feature = "alloc")]
 #[macro_export]
 macro_rules! try_cast_boxed {
     ($type:path, $val:expr) => {{
