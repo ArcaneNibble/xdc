@@ -11,12 +11,12 @@ trait HasId {
 }
 
 #[xdc_trait]
-trait HasLocation : HasId {
+trait HasLocation: HasId {
     fn location(&self) -> (u32, u32);
 }
 
 #[xdc_trait]
-trait HasColor : HasId {
+trait HasColor: HasId {
     fn color(&self) -> u32;
 }
 
@@ -25,7 +25,7 @@ struct Point {
     id: u32,
     x: u32,
     y: u32,
-    col: u32
+    col: u32,
 }
 
 #[xdc_impl]
@@ -56,7 +56,12 @@ fn main() {
     use alloc::boxed::Box;
 
     {
-        let test = Point { id: 123, x: 1, y: 2, col:3};
+        let test = Point {
+            id: 123,
+            x: 1,
+            y: 2,
+            col: 3,
+        };
         let test_as_haslocation: &dyn HasLocation = &test;
         test_as_haslocation.location();
         test_as_haslocation.id();
@@ -66,7 +71,12 @@ fn main() {
     }
 
     {
-        let mut test = Point { id: 123, x: 1, y: 2, col:3};
+        let mut test = Point {
+            id: 123,
+            x: 1,
+            y: 2,
+            col: 3,
+        };
         let test_as_haslocation: &mut dyn HasLocation = &mut test;
         test_as_haslocation.location();
         test_as_haslocation.id();
@@ -76,7 +86,12 @@ fn main() {
     }
 
     {
-        let test = Point { id: 123, x: 1, y: 2, col:3};
+        let test = Point {
+            id: 123,
+            x: 1,
+            y: 2,
+            col: 3,
+        };
         let test_as_haslocation: Box<dyn HasLocation> = Box::new(test);
         test_as_haslocation.location();
         test_as_haslocation.id();

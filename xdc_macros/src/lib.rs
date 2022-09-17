@@ -8,7 +8,10 @@ static NEXT_UID: AtomicU64 = AtomicU64::new(1);
 
 #[proc_macro_attribute]
 #[proc_macro_error]
-pub fn xdc_trait(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn xdc_trait(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
 
     let mut input_parsed = match syn::parse2::<ItemTrait>(input) {
@@ -17,7 +20,10 @@ pub fn xdc_trait(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream)
     };
 
     if !input_parsed.generics.params.is_empty() {
-        abort!(input_parsed.generics, "Cannot have generics here (including const generics)")
+        abort!(
+            input_parsed.generics,
+            "Cannot have generics here (including const generics)"
+        )
     }
 
     let trait_id = input_parsed.ident.clone();
@@ -39,7 +45,10 @@ pub fn xdc_trait(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream)
 
 #[proc_macro_attribute]
 #[proc_macro_error]
-pub fn xdc_struct(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn xdc_struct(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
 
     let input_parsed = match syn::parse2::<ItemStruct>(input) {
@@ -49,7 +58,10 @@ pub fn xdc_struct(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream
 
     let struct_id = input_parsed.ident.clone();
     let meta_id = Ident::new(&format!("__{}_XDC_METADATA", struct_id), struct_id.span());
-    let objbase_id = Ident::new(&format!("__{}_XDC_METADATA_OBJBASE", struct_id), struct_id.span());
+    let objbase_id = Ident::new(
+        &format!("__{}_XDC_METADATA_OBJBASE", struct_id),
+        struct_id.span(),
+    );
 
     let output = quote! {
         #input_parsed
@@ -84,7 +96,10 @@ pub fn xdc_struct(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream
 
 #[proc_macro_attribute]
 #[proc_macro_error]
-pub fn xdc_impl(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn xdc_impl(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let input = proc_macro2::TokenStream::from(input);
 
     let input_parsed = match syn::parse2::<ItemImpl>(input) {
@@ -106,7 +121,10 @@ pub fn xdc_impl(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream) 
 
     // make our necessary idents
     if let Some(_) = &on_type.qself {
-        abort!(on_type, "Cannot have qualified syntax here (must be bare ident)")
+        abort!(
+            on_type,
+            "Cannot have qualified syntax here (must be bare ident)"
+        )
     }
     let on_type = match on_type.path.get_ident() {
         Some(x) => x,
@@ -114,17 +132,24 @@ pub fn xdc_impl(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream) 
     };
     let meta_id = Ident::new(&format!("__{}_XDC_METADATA", on_type), on_type.span());
 
-    let entry_path_concat = trait_.segments.iter().map(|ps| {
-        if ps.arguments != PathArguments::None {
-            abort!(ps, "Cannot have arguments here");
-        }
-        ps.ident.to_string()
-    }).fold(String::new(), |mut s, id| {
-        s.push_str("_");
-        s.push_str(&id);
-        s
-    });
-    let entry_id = Ident::new(&format!("__{}_XDC_METADATA{}", on_type, entry_path_concat), on_type.span());
+    let entry_path_concat = trait_
+        .segments
+        .iter()
+        .map(|ps| {
+            if ps.arguments != PathArguments::None {
+                abort!(ps, "Cannot have arguments here");
+            }
+            ps.ident.to_string()
+        })
+        .fold(String::new(), |mut s, id| {
+            s.push_str("_");
+            s.push_str(&id);
+            s
+        });
+    let entry_id = Ident::new(
+        &format!("__{}_XDC_METADATA{}", on_type, entry_path_concat),
+        on_type.span(),
+    );
 
     // output
     let output = quote! {
