@@ -9,5 +9,6 @@ edition = "2021"
 xdc_macros = { path = "../xdc_macros", default-features = false }
 
 [features]
-default = ["alloc"]
+default = ["std"]
 alloc = ["xdc_macros/alloc"]
+std = ["alloc", "xdc_macros/std"]

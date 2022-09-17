@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 linkme = "0.3"
+# xdc = { path = "../xdc"}
 # xdc = { path = "../xdc", default-features = false, features = [ ] }
 xdc = { path = "../xdc", default-features = false, features = [ "alloc" ] }

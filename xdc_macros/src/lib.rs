@@ -6,6 +6,16 @@ use syn::{Ident, ItemImpl, ItemStruct, ItemTrait, PathArguments, Type, TypeParam
 
 static NEXT_UID: AtomicU64 = AtomicU64::new(1);
 
+#[cfg(feature = "std")]
+fn std_is_enabled() -> bool {
+    true
+}
+
+#[cfg(not(feature = "std"))]
+fn std_is_enabled() -> bool {
+    false
+}
+
 #[cfg(feature = "alloc")]
 fn alloc_is_enabled() -> bool {
     true
@@ -73,7 +83,13 @@ pub fn xdc_struct(
         struct_id.span(),
     );
 
-    let alloc_impl = if alloc_is_enabled() {
+    let alloc_impl = if std_is_enabled() {
+        quote! {
+            fn to_base_boxed(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn ::xdc::ObjBase> {
+                self
+            }
+        }
+    } else if alloc_is_enabled() {
         quote! {
             fn to_base_boxed(self: ::alloc::boxed::Box<Self>) -> ::alloc::boxed::Box<dyn ::xdc::ObjBase> {
                 self

@@ -15,5 +15,6 @@ syn = { version = "1.0", features = ["full", "extra-traits"] }
 proc-macro = true
 
 [features]
-default = ["alloc"]
+default = ["std"]
 alloc = []
+std = ["alloc"]
