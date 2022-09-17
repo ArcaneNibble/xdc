@@ -1,5 +1,5 @@
 extern crate proc_macro;
-use proc_macro_error::proc_macro_error;
+use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use std::sync::atomic::{AtomicU64, Ordering};
 use syn::{ItemTrait, TypeParamBound};
@@ -15,6 +15,10 @@ pub fn xdc_trait(_attr: proc_macro::TokenStream, input: proc_macro::TokenStream)
         Ok(x) => x,
         Err(e) => return proc_macro::TokenStream::from(e.to_compile_error()),
     };
+
+    if !input_parsed.generics.params.is_empty() {
+        abort!(input_parsed.generics, "Cannot have generics here (including const generics)")
+    }
 
     let trait_id = input_parsed.ident.clone();
     let trait_uid: u64 = NEXT_UID.fetch_add(1, Ordering::SeqCst);
