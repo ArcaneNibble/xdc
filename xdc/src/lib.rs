@@ -55,6 +55,7 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
             data: from_data_ptr,
             vtable: meta_ent.vtable,
         };
+        assert_eq!(core::mem::size_of::<FatPointer>(), core::mem::size_of::<*const T>());
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *const T>(&casted_object);
         Some(&*new_trait_ptr)
     }
@@ -79,6 +80,7 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
             data: from_data_ptr,
             vtable: meta_ent.vtable,
         };
+        assert_eq!(core::mem::size_of::<FatPointer>(), core::mem::size_of::<*mut T>());
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
         Some(&mut *new_trait_ptr)
     }
@@ -103,6 +105,7 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) 
             data: from_data_ptr,
             vtable: meta_ent.vtable,
         };
+        assert_eq!(core::mem::size_of::<FatPointer>(), core::mem::size_of::<*mut T>());
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
         Some(Box::from_raw(new_trait_ptr))
     }
