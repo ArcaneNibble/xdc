@@ -45,27 +45,15 @@ macro_rules! metadata_entry {
 
 
 pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T>{
-    // look for the correct vtable
-    let mut vtable = core::ptr::null();
-
-    let meta = from.get_metadata();
-    for meta_ent in meta {
-        if meta_ent.typeid == typeid {
-            vtable = meta_ent.vtable;
-            break;
-        }
-    }
-
-    if vtable == core::ptr::null() {
-        return None;
-    }
+    // look for the correct metadata entry
+    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
     unsafe {
         let from_data_ptr = core::mem::transmute::<*const dyn ObjBase, FatPointer>(from).data;
         let casted_object = FatPointer {
             data: from_data_ptr,
-            vtable,
+            vtable: meta_ent.vtable,
         };
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *const T>(&casted_object);
         Some(&*new_trait_ptr)
@@ -81,27 +69,15 @@ macro_rules! try_cast {
 }
 
 pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) -> Option<&mut T>{
-    // look for the correct vtable
-    let mut vtable = core::ptr::null();
-
-    let meta = from.get_metadata();
-    for meta_ent in meta {
-        if meta_ent.typeid == typeid {
-            vtable = meta_ent.vtable;
-            break;
-        }
-    }
-
-    if vtable == core::ptr::null() {
-        return None;
-    }
+    // look for the correct metadata entry
+    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
     unsafe {
         let from_data_ptr = core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from).data;
         let casted_object = FatPointer {
             data: from_data_ptr,
-            vtable,
+            vtable: meta_ent.vtable,
         };
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
         Some(&mut *new_trait_ptr)
@@ -117,27 +93,15 @@ macro_rules! try_cast_mut {
 }
 
 pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) -> Option<Box<T>>{
-    // look for the correct vtable
-    let mut vtable = core::ptr::null();
-
-    let meta = from.get_metadata();
-    for meta_ent in meta {
-        if meta_ent.typeid == typeid {
-            vtable = meta_ent.vtable;
-            break;
-        }
-    }
-
-    if vtable == core::ptr::null() {
-        return None;
-    }
+    // look for the correct metadata entry
+    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
     unsafe {
         let from_data_ptr = core::mem::transmute::<*mut dyn ObjBase, FatPointer>(Box::into_raw(from)).data;
         let casted_object = FatPointer {
             data: from_data_ptr,
-            vtable,
+            vtable: meta_ent.vtable,
         };
         let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
         Some(Box::from_raw(new_trait_ptr))
