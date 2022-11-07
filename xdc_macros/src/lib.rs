@@ -26,6 +26,15 @@ fn alloc_is_enabled() -> bool {
     false
 }
 
+/// Tag a trait with the appropriate data to allow dynamic casting to that trait
+/// 
+/// # Example
+/// 
+/// ```
+/// use xdc::*;
+/// #[xdc_trait]
+/// trait Foo {}
+/// ```
 #[proc_macro_attribute]
 #[proc_macro_error]
 pub fn xdc_trait(
@@ -63,6 +72,15 @@ pub fn xdc_trait(
     proc_macro::TokenStream::from(output)
 }
 
+/// Tag a struct with the appropriate data to allow dynamic casting of that struct
+/// 
+/// # Example
+/// 
+/// ```
+/// use xdc::*;
+/// #[xdc_struct]
+/// struct Foo {}
+/// ```
 #[proc_macro_attribute]
 #[proc_macro_error]
 pub fn xdc_struct(
@@ -103,11 +121,11 @@ pub fn xdc_struct(
         #input_parsed
 
         #[allow(non_upper_case_globals)]
-        #[::linkme::distributed_slice]
+        #[::xdc::distributed_slice]
         static #meta_id: [::xdc::MetadataEntry] = [..];
 
         #[allow(non_upper_case_globals)]
-        #[::linkme::distributed_slice(#meta_id)]
+        #[::xdc::distributed_slice(#meta_id)]
         static #objbase_id: ::xdc::MetadataEntry = ::xdc::metadata_entry!(#struct_id, ::xdc::ObjBase);
 
         impl ::xdc::ObjBase for #struct_id {
@@ -128,6 +146,19 @@ pub fn xdc_struct(
     proc_macro::TokenStream::from(output)
 }
 
+/// Tag a trait with the appropriate data to allow dynamic casting to that implementation
+/// 
+/// # Example
+/// 
+/// ```
+/// use xdc::*;
+/// #[xdc_struct]
+/// trait Bar {}
+/// #[xdc_struct]
+/// struct Foo {}
+/// #[xdc_impl]
+/// impl Bar for Foo {}
+/// ```
 #[proc_macro_attribute]
 #[proc_macro_error]
 pub fn xdc_impl(
@@ -190,7 +221,7 @@ pub fn xdc_impl(
         #input_parsed
 
         #[allow(non_upper_case_globals)]
-        #[::linkme::distributed_slice(#meta_id)]
+        #[::xdc::distributed_slice(#meta_id)]
         static #entry_id: ::xdc::MetadataEntry = ::xdc::metadata_entry!(#on_type, #trait_);
     };
 

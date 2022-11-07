@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 xdc_macros = { path = "../xdc_macros", default-features = false }
+linkme = "0.3" # Re-exported here to ensure downstream users don't need to depend on it
 
 [features]
 default = ["std"]
