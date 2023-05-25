@@ -5,8 +5,7 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
-extern crate linkme;
-pub use linkme::distributed_slice;
+pub use ::linkme;
 
 /// The rust fat pointer structure as defined by the compiler
 /// 

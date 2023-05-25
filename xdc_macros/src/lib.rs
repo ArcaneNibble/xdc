@@ -121,11 +121,13 @@ pub fn xdc_struct(
         #input_parsed
 
         #[allow(non_upper_case_globals)]
-        #[::xdc::distributed_slice]
+        #[::xdc::linkme::distributed_slice]
+        #[linkme(crate = ::xdc::linkme)]
         static #meta_id: [::xdc::MetadataEntry] = [..];
 
         #[allow(non_upper_case_globals)]
-        #[::xdc::distributed_slice(#meta_id)]
+        #[::xdc::linkme::distributed_slice(#meta_id)]
+        #[linkme(crate = ::xdc::linkme)]
         static #objbase_id: ::xdc::MetadataEntry = ::xdc::metadata_entry!(#struct_id, ::xdc::ObjBase);
 
         impl ::xdc::ObjBase for #struct_id {
@@ -221,7 +223,8 @@ pub fn xdc_impl(
         #input_parsed
 
         #[allow(non_upper_case_globals)]
-        #[::xdc::distributed_slice(#meta_id)]
+        #[::xdc::linkme::distributed_slice(#meta_id)]
+        #[linkme(crate = ::xdc::linkme)]
         static #entry_id: ::xdc::MetadataEntry = ::xdc::metadata_entry!(#on_type, #trait_);
     };
 
