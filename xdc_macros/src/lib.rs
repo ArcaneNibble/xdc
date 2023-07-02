@@ -27,9 +27,9 @@ fn alloc_is_enabled() -> bool {
 }
 
 /// Tag a trait with the appropriate data to allow dynamic casting to that trait
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use xdc::*;
 /// #[xdc_trait]
@@ -73,9 +73,9 @@ pub fn xdc_trait(
 }
 
 /// Tag a struct with the appropriate data to allow dynamic casting of that struct
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use xdc::*;
 /// #[xdc_struct]
@@ -149,9 +149,9 @@ pub fn xdc_struct(
 }
 
 /// Tag a trait with the appropriate data to allow dynamic casting to that implementation
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use xdc::*;
 /// #[xdc_struct]
