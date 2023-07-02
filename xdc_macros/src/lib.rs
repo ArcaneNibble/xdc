@@ -28,6 +28,8 @@ fn alloc_is_enabled() -> bool {
 
 /// Tag a trait with the appropriate data to allow dynamic casting to that trait
 ///
+/// Implementation details: injects a `::xdc::TypeId` implementation for the trait object
+///
 /// # Example
 ///
 /// ```
@@ -73,6 +75,9 @@ pub fn xdc_trait(
 }
 
 /// Tag a struct with the appropriate data to allow dynamic casting of that struct
+///
+/// Implementation details: injects a `::xdc::ObjBase` implementation for the struct,
+/// including starting to build out the `MetadataEntry` array
 ///
 /// # Example
 ///
@@ -148,7 +153,9 @@ pub fn xdc_struct(
     proc_macro::TokenStream::from(output)
 }
 
-/// Tag a trait with the appropriate data to allow dynamic casting to that implementation
+/// Tag a trait impl with the appropriate data to allow dynamic casting to that implementation
+///
+/// Implementation details: adds one entry to the `MetadataEntry` array for this specific trait object
 ///
 /// # Example
 ///

@@ -18,7 +18,7 @@ pub struct FatPointer {
     pub data: *const u8,
     pub vtable: *const u8,
 }
-/// Trait assigned to all structs that can be casted by xdc
+/// Trait assigned to all trait objects that can be casted by xdc
 ///
 /// Ideally, we would be able to just use [core::any::TypeId], but
 /// `std::any::TypeId::of<T>` is not `const fn`
