@@ -1,12 +1,13 @@
 [package]
 name = "xdc"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
+license = "0BSD"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xdc_macros = { path = "../xdc_macros", default-features = false }
+xdc_macros = { path = "../xdc_macros", version = "0.1", default-features = false }
 linkme = "0.3" # Re-exported here to ensure downstream users don't need to depend on it
 
 [features]
