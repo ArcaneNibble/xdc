@@ -5,10 +5,10 @@ extern crate alloc;
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
-pub use ::linkme;
+pub use linkme;
 
 /// The rust fat pointer structure as defined by the compiler
-/// 
+///
 /// May break in non standard rust implementation
 #[repr(C)]
 pub struct FatPointer {
@@ -24,7 +24,6 @@ pub trait TypeId {
 pub const fn type_id<T: TypeId + ?Sized>() -> u64 {
     T::TYPEID
 }
-
 
 pub trait ObjBase {
     fn to_base(self: &Self) -> &dyn ObjBase;
@@ -62,20 +61,20 @@ macro_rules! metadata_entry {
 }
 
 /// The underlying implementation for dynamc casting
-/// 
-/// It is HIGHLY recommended to use the macro [try_cast!] 
+///
+/// It is HIGHLY recommended to use the macro [try_cast!]
 /// instead as it is more user friendly, and less likely
 /// to produce illegal behaviour.
-/// 
+///
 /// # Types
-/// 
+///
 /// * `T` - The type to cast to; should be in the form `&dyn Trait`
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `from` - The object to cast from
 /// * `typeid` - The type id of `T` found using [type_id]
-/// 
+///
 pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
@@ -97,14 +96,14 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
 }
 
 /// The intended userfacing way to cast between immutable trait objects
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `type` - The raw trait you want to cast to
 /// * `val` - The trait object you wish to cast
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use xdc::*;
 /// #[xdc_trait]
@@ -121,12 +120,12 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
 /// impl Foo for Test {}
 /// #[xdc_impl]
 /// impl Bar for Test {}
-/// 
+///
 /// let example = Test {};
 /// let foo_example: &dyn Foo = &example;
 /// let bar_example: &dyn Bar = xdc::try_cast!(Bar, foo_example).unwrap();
 /// ```
-/// 
+///
 #[macro_export]
 macro_rules! try_cast {
     ($type:path, $val:expr) => {{
@@ -137,20 +136,20 @@ macro_rules! try_cast {
 }
 
 /// The underlying implementation for dynamc casting mutably
-/// 
-/// It is HIGHLY recommended to use the macro [try_cast_mut!] 
+///
+/// It is HIGHLY recommended to use the macro [try_cast_mut!]
 /// instead as it is more user friendly, and less likely
 /// to produce illegal behaviour.
-/// 
+///
 /// # Types
-/// 
+///
 /// * `T` - The type to cast to; should be in the form `&mut dyn Trait`
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `from` - The object to cast from
 /// * `typeid` - The type id of `T` found using [type_id]
-/// 
+///
 pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) -> Option<&mut T> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
@@ -172,14 +171,14 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
 }
 
 /// The intended userfacing way to cast between immutable trait objects
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `type` - The raw trait you want to cast to
 /// * `val` - The trait object you wish to cast
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use xdc::*;
 /// #[xdc_trait]
@@ -196,12 +195,12 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
 /// impl Foo for Test {}
 /// #[xdc_impl]
 /// impl Bar for Test {}
-/// 
+///
 /// let mut example: Test = Test {};
 /// let mut foo_example: &mut dyn Foo = &mut example;
 /// let mut bar_example: &mut dyn Bar = xdc::try_cast_mut!(Bar, foo_example).unwrap();
 /// ```
-/// 
+///
 #[macro_export]
 macro_rules! try_cast_mut {
     ($type:path, $val:expr) => {{
