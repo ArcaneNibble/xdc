@@ -49,6 +49,7 @@ pub fn xdc_trait(
     };
 
     if !input_parsed.generics.params.is_empty() {
+        // if (input_parsed.generics.p)
         abort!(
             input_parsed.generics,
             "Cannot have generics here (including const generics)"
@@ -154,7 +155,7 @@ pub fn xdc_struct(
 /// 
 /// ```
 /// use xdc::*;
-/// #[xdc_struct]
+/// #[xdc_trait]
 /// trait Bar {}
 /// #[xdc_struct]
 /// struct Foo {}
