@@ -7,24 +7,38 @@ use alloc::boxed::Box;
 
 pub use linkme;
 
-/// The rust fat pointer structure as defined by the compiler
+/// The Rust fat pointer structure as defined by the compiler
 ///
-/// May break in non standard rust implementation
+/// This was at one point `std::raw::TraitObject` and is now `#![feature(ptr_metadata)]`,
+/// but neither of those are available on stable.
+///
+/// This will break if rustc ever changes this layout.
 #[repr(C)]
 pub struct FatPointer {
     pub data: *const u8,
     pub vtable: *const u8,
 }
-/// Trait assigned to all structs that can be casted
+/// Trait assigned to all structs that can be casted by xdc
+///
+/// Ideally, we would be able to just use [core::any::TypeId], but
+/// `std::any::TypeId::of<T>` is not `const fn`
+/// ([tracking issue](https://github.com/rust-lang/rust/issues/77125)).
+/// We require `const fn` in order to make metadata tables be fully generated
+/// at compile time and embedded into the read-only section of the resulting binary.
+///
+/// Instead, we generate our own type IDs by incrementing an integer in our proc macro.
+/// This is the primary cause of potential unsafety when using xdc across multiple crates
+/// but is the simplest way of getting something working on stable.
 pub trait TypeId {
     const TYPEID: u64;
 }
 
-/// Get the type_id of a given type
+/// Get the [TypeId] of a given type
 pub const fn type_id<T: TypeId + ?Sized>() -> u64 {
     T::TYPEID
 }
 
+/// Base trait that will be added to all cast-able structs
 pub trait ObjBase {
     fn to_base(self: &Self) -> &dyn ObjBase;
     fn to_base_mut(self: &mut Self) -> &mut dyn ObjBase;
@@ -45,6 +59,8 @@ pub struct MetadataEntry {
 }
 unsafe impl Sync for MetadataEntry {}
 
+/// Will be used to generate a [MetadataEntry] describing how to cast to
+/// "`$type` struct being referred to using a `$trait` trait object pointer"
 #[macro_export]
 macro_rules! metadata_entry {
     ($type:ty, $trait:path) => {
@@ -60,7 +76,7 @@ macro_rules! metadata_entry {
     };
 }
 
-/// The underlying implementation for dynamc casting
+/// The underlying implementation for dynamic casting
 ///
 /// It is HIGHLY recommended to use the macro [try_cast!]
 /// instead as it is more user friendly, and less likely
@@ -68,11 +84,11 @@ macro_rules! metadata_entry {
 ///
 /// # Types
 ///
-/// * `T` - The type to cast to; should be in the form `&dyn Trait`
+/// * `T` - The trait type to cast to
 ///
 /// # Arguments
 ///
-/// * `from` - The object to cast from
+/// * `from` - The object to cast
 /// * `typeid` - The type id of `T` found using [type_id]
 ///
 pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
@@ -95,11 +111,11 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
     }
 }
 
-/// The intended userfacing way to cast between immutable trait objects
+/// The intended user-facing way to cast between immutable trait objects
 ///
 /// # Arguments
 ///
-/// * `type` - The raw trait you want to cast to
+/// * `type` - The trait type you want to cast to
 /// * `val` - The trait object you wish to cast
 ///
 /// # Example
@@ -135,7 +151,7 @@ macro_rules! try_cast {
     }};
 }
 
-/// The underlying implementation for dynamc casting mutably
+/// The underlying implementation for dynamic casting mutably
 ///
 /// It is HIGHLY recommended to use the macro [try_cast_mut!]
 /// instead as it is more user friendly, and less likely
@@ -143,11 +159,11 @@ macro_rules! try_cast {
 ///
 /// # Types
 ///
-/// * `T` - The type to cast to; should be in the form `&mut dyn Trait`
+/// * `T` - The trait type to cast to
 ///
 /// # Arguments
 ///
-/// * `from` - The object to cast from
+/// * `from` - The object to cast
 /// * `typeid` - The type id of `T` found using [type_id]
 ///
 pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) -> Option<&mut T> {
@@ -170,7 +186,7 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
     }
 }
 
-/// The intended userfacing way to cast between immutable trait objects
+/// The intended user-facing way to cast between mutable trait objects
 ///
 /// # Arguments
 ///
@@ -210,6 +226,21 @@ macro_rules! try_cast_mut {
     }};
 }
 
+/// The underlying implementation for dynamic casting a [Box]
+///
+/// It is HIGHLY recommended to use the macro [try_cast_mut!]
+/// instead as it is more user friendly, and less likely
+/// to produce illegal behaviour.
+///
+/// # Types
+///
+/// * `T` - The trait type to cast to
+///
+/// # Arguments
+///
+/// * `from` - The object to cast
+/// * `typeid` - The type id of `T` found using [type_id]
+///
 #[cfg(feature = "alloc")]
 pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) -> Option<Box<T>> {
     // look for the correct metadata entry
@@ -231,6 +262,38 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) 
         Some(Box::from_raw(new_trait_ptr))
     }
 }
+
+/// The intended user-facing way to cast between boxed trait objects
+///
+/// # Arguments
+///
+/// * `type` - The raw trait you want to cast to
+/// * `val` - The trait object you wish to cast
+///
+/// # Example
+///
+/// ```
+/// use xdc::*;
+/// #[xdc_trait]
+/// trait Parent {}
+/// #[xdc_trait]
+/// trait Foo : Parent {}
+/// #[xdc_trait]
+/// trait Bar : Parent {}
+/// #[xdc_struct]
+/// struct Test {}
+/// #[xdc_impl]
+/// impl Parent for Test {}
+/// #[xdc_impl]
+/// impl Foo for Test {}
+/// #[xdc_impl]
+/// impl Bar for Test {}
+///
+/// let example: Test = Test {};
+/// let foo_example: Box<dyn Foo> = Box::new(example);
+/// let bar_example: Box<dyn Bar> = xdc::try_cast_boxed!(Bar, foo_example).unwrap();
+/// ```
+///
 #[cfg(feature = "alloc")]
 #[macro_export]
 macro_rules! try_cast_boxed {
