@@ -63,11 +63,11 @@ fn main() {
             col: 3,
         };
         let test_as_haslocation: &dyn HasLocation = &test;
-        test_as_haslocation.location();
-        test_as_haslocation.id();
+        assert_eq!(test_as_haslocation.location(), (1, 2));
+        assert_eq!(test_as_haslocation.id(), 123);
         let test_cast = xdc::try_cast!(HasColor, test_as_haslocation).unwrap();
-        test_cast.color();
-        test_cast.id();
+        assert_eq!(test_cast.color(), 3);
+        assert_eq!(test_cast.id(), 123);
     }
 
     {
@@ -78,11 +78,11 @@ fn main() {
             col: 3,
         };
         let test_as_haslocation: &mut dyn HasLocation = &mut test;
-        test_as_haslocation.location();
-        test_as_haslocation.id();
+        assert_eq!(test_as_haslocation.location(), (1, 2));
+        assert_eq!(test_as_haslocation.id(), 123);
         let test_cast = xdc::try_cast_mut!(HasColor, test_as_haslocation).unwrap();
-        test_cast.color();
-        test_cast.id();
+        assert_eq!(test_cast.color(), 3);
+        assert_eq!(test_cast.id(), 123);
     }
 
     {
@@ -93,11 +93,11 @@ fn main() {
             col: 3,
         };
         let test_as_haslocation: Box<dyn HasLocation> = Box::new(test);
-        test_as_haslocation.location();
-        test_as_haslocation.id();
+        assert_eq!(test_as_haslocation.location(), (1, 2));
+        assert_eq!(test_as_haslocation.id(), 123);
         let test_cast = xdc::try_cast_boxed!(HasColor, test_as_haslocation).unwrap();
-        test_cast.color();
-        test_cast.id();
+        assert_eq!(test_cast.color(), 3);
+        assert_eq!(test_cast.id(), 123);
     }
 
     println!("Hello, world!");
