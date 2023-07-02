@@ -13,7 +13,7 @@ In order for this crate to function, you need to manually tag all structs, trait
 
 You must annotate all traits with `#[xdc_trait]`, structs with `#[xdc_struct]` and implementations with `#[xdc_impl]`.
 
-The [./xdc_test] directory contains a simple example program that demonstrates proper usage of this library.
+The [`xdc_test`](./xdc_test) directory contains a simple example program that demonstrates proper usage of this library.
 
 ## How XDC works
 
