@@ -91,24 +91,22 @@ macro_rules! metadata_entry {
 /// * `from` - The object to cast
 /// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
-pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
+pub unsafe fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
-    unsafe {
-        let from_data_ptr = core::mem::transmute::<*const dyn ObjBase, FatPointer>(from).data;
-        let casted_object = FatPointer {
-            data: from_data_ptr,
-            vtable: meta_ent.vtable,
-        };
-        assert_eq!(
-            core::mem::size_of::<FatPointer>(),
-            core::mem::size_of::<*const T>()
-        );
-        let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *const T>(&casted_object);
-        Some(&*new_trait_ptr)
-    }
+    let from_data_ptr = core::mem::transmute::<*const dyn ObjBase, FatPointer>(from).data;
+    let casted_object = FatPointer {
+        data: from_data_ptr,
+        vtable: meta_ent.vtable,
+    };
+    assert_eq!(
+        core::mem::size_of::<FatPointer>(),
+        core::mem::size_of::<*const T>()
+    );
+    let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *const T>(&casted_object);
+    Some(&*new_trait_ptr)
 }
 
 /// The intended user-facing way to cast between immutable trait objects
@@ -146,7 +144,8 @@ pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<
 macro_rules! try_cast {
     ($type:path, $val:expr) => {{
         let objbase = ::xdc::ObjBase::to_base($val);
-        let ret: Option<&dyn $type> = ::xdc::try_cast(objbase, xdc::type_id::<dyn $type>());
+        let ret: Option<&dyn $type> =
+            unsafe { ::xdc::try_cast(objbase, xdc::type_id::<dyn $type>()) };
         ret
     }};
 }
@@ -166,24 +165,25 @@ macro_rules! try_cast {
 /// * `from` - The object to cast
 /// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
-pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) -> Option<&mut T> {
+pub unsafe fn try_cast_mut<T: ObjBase + ?Sized>(
+    from: &mut dyn ObjBase,
+    typeid: u64,
+) -> Option<&mut T> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
-    unsafe {
-        let from_data_ptr = core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from).data;
-        let casted_object = FatPointer {
-            data: from_data_ptr,
-            vtable: meta_ent.vtable,
-        };
-        assert_eq!(
-            core::mem::size_of::<FatPointer>(),
-            core::mem::size_of::<*mut T>()
-        );
-        let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
-        Some(&mut *new_trait_ptr)
-    }
+    let from_data_ptr = core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from).data;
+    let casted_object = FatPointer {
+        data: from_data_ptr,
+        vtable: meta_ent.vtable,
+    };
+    assert_eq!(
+        core::mem::size_of::<FatPointer>(),
+        core::mem::size_of::<*mut T>()
+    );
+    let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
+    Some(&mut *new_trait_ptr)
 }
 
 /// The intended user-facing way to cast between mutable trait objects
@@ -221,7 +221,8 @@ pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) ->
 macro_rules! try_cast_mut {
     ($type:path, $val:expr) => {{
         let objbase = ::xdc::ObjBase::to_base_mut($val);
-        let ret: Option<&mut dyn $type> = ::xdc::try_cast_mut(objbase, xdc::type_id::<dyn $type>());
+        let ret: Option<&mut dyn $type> =
+            unsafe { ::xdc::try_cast_mut(objbase, xdc::type_id::<dyn $type>()) };
         ret
     }};
 }
@@ -242,25 +243,26 @@ macro_rules! try_cast_mut {
 /// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
 #[cfg(feature = "alloc")]
-pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) -> Option<Box<T>> {
+pub unsafe fn try_cast_boxed<T: ObjBase + ?Sized>(
+    from: Box<dyn ObjBase>,
+    typeid: u64,
+) -> Option<Box<T>> {
     // look for the correct metadata entry
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
-    unsafe {
-        let from_data_ptr =
-            core::mem::transmute::<*mut dyn ObjBase, FatPointer>(Box::into_raw(from)).data;
-        let casted_object = FatPointer {
-            data: from_data_ptr,
-            vtable: meta_ent.vtable,
-        };
-        assert_eq!(
-            core::mem::size_of::<FatPointer>(),
-            core::mem::size_of::<*mut T>()
-        );
-        let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
-        Some(Box::from_raw(new_trait_ptr))
-    }
+    let from_data_ptr =
+        core::mem::transmute::<*mut dyn ObjBase, FatPointer>(Box::into_raw(from)).data;
+    let casted_object = FatPointer {
+        data: from_data_ptr,
+        vtable: meta_ent.vtable,
+    };
+    assert_eq!(
+        core::mem::size_of::<FatPointer>(),
+        core::mem::size_of::<*mut T>()
+    );
+    let new_trait_ptr = core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object);
+    Some(Box::from_raw(new_trait_ptr))
 }
 
 /// The intended user-facing way to cast between boxed trait objects
@@ -300,7 +302,7 @@ macro_rules! try_cast_boxed {
     ($type:path, $val:expr) => {{
         let objbase = ::xdc::ObjBase::to_base_boxed($val);
         let ret: Option<Box<dyn $type>> =
-            ::xdc::try_cast_boxed(objbase, xdc::type_id::<dyn $type>());
+            unsafe { ::xdc::try_cast_boxed(objbase, xdc::type_id::<dyn $type>()) };
         ret
     }};
 }
