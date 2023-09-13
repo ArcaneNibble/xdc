@@ -89,7 +89,7 @@ macro_rules! metadata_entry {
 /// # Arguments
 ///
 /// * `from` - The object to cast
-/// * `typeid` - The type id of `T` found using [type_id]
+/// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
 pub fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
     // look for the correct metadata entry
@@ -164,7 +164,7 @@ macro_rules! try_cast {
 /// # Arguments
 ///
 /// * `from` - The object to cast
-/// * `typeid` - The type id of `T` found using [type_id]
+/// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
 pub fn try_cast_mut<T: ObjBase + ?Sized>(from: &mut dyn ObjBase, typeid: u64) -> Option<&mut T> {
     // look for the correct metadata entry
@@ -239,7 +239,7 @@ macro_rules! try_cast_mut {
 /// # Arguments
 ///
 /// * `from` - The object to cast
-/// * `typeid` - The type id of `T` found using [type_id]
+/// * `typeid` - The type id of `dyn T` found using [type_id]
 ///
 #[cfg(feature = "alloc")]
 pub fn try_cast_boxed<T: ObjBase + ?Sized>(from: Box<dyn ObjBase>, typeid: u64) -> Option<Box<T>> {
