@@ -129,10 +129,6 @@ pub fn try_cast<T: ObjBase + TypeId + ?Sized>(from: &dyn ObjBase) -> Option<&T> 
 
 /// Dynamic cast between mutable trait objects
 ///
-/// It is HIGHLY recommended to use the macro [try_cast_mut!]
-/// instead as it is more user friendly, and less likely
-/// to produce illegal behaviour.
-///
 /// # Types
 ///
 /// * `T` - The trait type to cast to. Should be a `dyn Trait`
