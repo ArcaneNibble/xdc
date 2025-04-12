@@ -1,7 +1,7 @@
 [package]
 name = "xdc_macros"
-version = "0.1.0"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 license = "0BSD"
 repository = "https://github.com/ArcaneNibble/xdc"
 description = "eXperimental Dynamic Casting - macros"

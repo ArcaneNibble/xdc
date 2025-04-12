@@ -22,6 +22,7 @@ trait HasColor: HasId {
 
 #[xdc_trait]
 trait HasTaste {
+    #[allow(dead_code)]
     fn taste(&self) -> &'static str;
 }
 

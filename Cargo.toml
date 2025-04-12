@@ -1,7 +1,3 @@
 [workspace]
-
-members = [
-    "xdc",
-    "xdc_macros",
-    "xdc_test",
-]
+resolver = "3"
+members = ["xdc", "xdc_macros", "xdc_test"]
