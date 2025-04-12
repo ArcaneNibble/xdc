@@ -72,47 +72,15 @@ macro_rules! metadata_entry {
     };
 }
 
-/// The underlying implementation for dynamic casting
-///
-/// It is HIGHLY recommended to use the macro [try_cast!]
-/// instead as it is more user friendly, and less likely
-/// to produce illegal behaviour.
+/// Dynamic cast between immutable trait objects
 ///
 /// # Types
 ///
-/// * `T` - The trait type to cast to
+/// * `T` - The trait type to cast to. Should be a `dyn Trait`
 ///
 /// # Arguments
 ///
 /// * `from` - The object to cast
-/// * `typeid` - The type id of `dyn T` found using [type_id]
-///
-pub unsafe fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> Option<&T> {
-    // look for the correct metadata entry
-    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
-
-    // vtable found, do transmuting
-    let from_data_ptr =
-        unsafe { core::mem::transmute::<*const dyn ObjBase, FatPointer>(from) }.data;
-    let casted_object = FatPointer {
-        data: from_data_ptr,
-        vtable: meta_ent.vtable,
-    };
-    assert_eq!(
-        core::mem::size_of::<FatPointer>(),
-        core::mem::size_of::<*const T>()
-    );
-    let new_trait_ptr =
-        unsafe { core::mem::transmute_copy::<FatPointer, *const T>(&casted_object) };
-    Some(unsafe { &*new_trait_ptr })
-}
-
-/// The intended user-facing way to cast between immutable trait objects
-///
-/// # Arguments
-///
-/// * `type` - The trait type you want to cast to
-/// * `val` - The trait object you wish to cast
 ///
 /// # Example
 ///
@@ -135,20 +103,31 @@ pub unsafe fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> 
 ///
 /// let example = Test {};
 /// let foo_example: &dyn Foo = &example;
-/// let bar_example: &dyn Bar = xdc::try_cast!(Bar, foo_example).unwrap();
+/// let bar_example: &dyn Bar = xdc::try_cast(foo_example).unwrap();
 /// ```
 ///
-#[macro_export]
-macro_rules! try_cast {
-    ($type:path, $val:expr) => {{
-        let objbase: &dyn ::xdc::ObjBase = $val;
-        let ret: Option<&dyn $type> =
-            unsafe { ::xdc::try_cast(objbase, xdc::type_id::<dyn $type>()) };
-        ret
-    }};
+pub fn try_cast<T: ObjBase + TypeId + ?Sized>(from: &dyn ObjBase) -> Option<&T> {
+    // look for the correct metadata entry
+    let typeid = type_id::<T>();
+    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
+
+    // vtable found, do transmuting
+    let from_data_ptr =
+        unsafe { core::mem::transmute::<*const dyn ObjBase, FatPointer>(from) }.data;
+    let casted_object = FatPointer {
+        data: from_data_ptr,
+        vtable: meta_ent.vtable,
+    };
+    assert_eq!(
+        core::mem::size_of::<FatPointer>(),
+        core::mem::size_of::<*const T>()
+    );
+    let new_trait_ptr =
+        unsafe { core::mem::transmute_copy::<FatPointer, *const T>(&casted_object) };
+    Some(unsafe { &*new_trait_ptr })
 }
 
-/// The underlying implementation for dynamic casting mutably
+/// Dynamic cast between mutable trait objects
 ///
 /// It is HIGHLY recommended to use the macro [try_cast_mut!]
 /// instead as it is more user friendly, and less likely
@@ -156,40 +135,11 @@ macro_rules! try_cast {
 ///
 /// # Types
 ///
-/// * `T` - The trait type to cast to
+/// * `T` - The trait type to cast to. Should be a `dyn Trait`
 ///
 /// # Arguments
 ///
 /// * `from` - The object to cast
-/// * `typeid` - The type id of `dyn T` found using [type_id]
-///
-pub unsafe fn try_cast_mut<T: ObjBase + ?Sized>(
-    from: &mut dyn ObjBase,
-    typeid: u64,
-) -> Option<&mut T> {
-    // look for the correct metadata entry
-    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
-
-    // vtable found, do transmuting
-    let from_data_ptr = unsafe { core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from) }.data;
-    let casted_object = FatPointer {
-        data: from_data_ptr,
-        vtable: meta_ent.vtable,
-    };
-    assert_eq!(
-        core::mem::size_of::<FatPointer>(),
-        core::mem::size_of::<*mut T>()
-    );
-    let new_trait_ptr = unsafe { core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object) };
-    Some(unsafe { &mut *new_trait_ptr })
-}
-
-/// The intended user-facing way to cast between mutable trait objects
-///
-/// # Arguments
-///
-/// * `type` - The raw trait you want to cast to
-/// * `val` - The trait object you wish to cast
 ///
 /// # Example
 ///
@@ -212,45 +162,16 @@ pub unsafe fn try_cast_mut<T: ObjBase + ?Sized>(
 ///
 /// let mut example: Test = Test {};
 /// let mut foo_example: &mut dyn Foo = &mut example;
-/// let mut bar_example: &mut dyn Bar = xdc::try_cast_mut!(Bar, foo_example).unwrap();
+/// let mut bar_example: &mut dyn Bar = xdc::try_cast_mut(foo_example).unwrap();
 /// ```
 ///
-#[macro_export]
-macro_rules! try_cast_mut {
-    ($type:path, $val:expr) => {{
-        let objbase: &mut dyn ::xdc::ObjBase = $val;
-        let ret: Option<&mut dyn $type> =
-            unsafe { ::xdc::try_cast_mut(objbase, xdc::type_id::<dyn $type>()) };
-        ret
-    }};
-}
-
-/// The underlying implementation for dynamic casting a [Box]
-///
-/// It is HIGHLY recommended to use the macro [try_cast_mut!]
-/// instead as it is more user friendly, and less likely
-/// to produce illegal behaviour.
-///
-/// # Types
-///
-/// * `T` - The trait type to cast to
-///
-/// # Arguments
-///
-/// * `from` - The object to cast
-/// * `typeid` - The type id of `dyn T` found using [type_id]
-///
-#[cfg(feature = "alloc")]
-pub unsafe fn try_cast_boxed<T: ObjBase + ?Sized>(
-    from: Box<dyn ObjBase>,
-    typeid: u64,
-) -> Option<Box<T>> {
+pub fn try_cast_mut<T: ObjBase + TypeId + ?Sized>(from: &mut dyn ObjBase) -> Option<&mut T> {
     // look for the correct metadata entry
+    let typeid = type_id::<T>();
     let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
 
     // vtable found, do transmuting
-    let from_data_ptr =
-        unsafe { core::mem::transmute::<*mut dyn ObjBase, FatPointer>(Box::into_raw(from)) }.data;
+    let from_data_ptr = unsafe { core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from) }.data;
     let casted_object = FatPointer {
         data: from_data_ptr,
         vtable: meta_ent.vtable,
@@ -260,15 +181,18 @@ pub unsafe fn try_cast_boxed<T: ObjBase + ?Sized>(
         core::mem::size_of::<*mut T>()
     );
     let new_trait_ptr = unsafe { core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object) };
-    Some(unsafe { Box::from_raw(new_trait_ptr) })
+    Some(unsafe { &mut *new_trait_ptr })
 }
 
-/// The intended user-facing way to cast between boxed trait objects
+/// Dynamic cast between [Box]ed trait objects
+///
+/// # Types
+///
+/// * `T` - The trait type to cast to. Should be a `dyn Trait`
 ///
 /// # Arguments
 ///
-/// * `type` - The raw trait you want to cast to
-/// * `val` - The trait object you wish to cast
+/// * `from` - The object to cast
 ///
 /// # Example
 ///
@@ -291,18 +215,28 @@ pub unsafe fn try_cast_boxed<T: ObjBase + ?Sized>(
 ///
 /// let example: Test = Test {};
 /// let foo_example: Box<dyn Foo> = Box::new(example);
-/// let bar_example: Box<dyn Bar> = xdc::try_cast_boxed!(Bar, foo_example).unwrap();
+/// let bar_example: Box<dyn Bar> = xdc::try_cast_boxed(foo_example).unwrap();
 /// ```
 ///
 #[cfg(feature = "alloc")]
-#[macro_export]
-macro_rules! try_cast_boxed {
-    ($type:path, $val:expr) => {{
-        let objbase: Box<dyn ::xdc::ObjBase> = $val;
-        let ret: Option<Box<dyn $type>> =
-            unsafe { ::xdc::try_cast_boxed(objbase, xdc::type_id::<dyn $type>()) };
-        ret
-    }};
+pub fn try_cast_boxed<T: ObjBase + TypeId + ?Sized>(from: Box<dyn ObjBase>) -> Option<Box<T>> {
+    // look for the correct metadata entry
+    let typeid = type_id::<T>();
+    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
+
+    // vtable found, do transmuting
+    let from_data_ptr =
+        unsafe { core::mem::transmute::<*mut dyn ObjBase, FatPointer>(Box::into_raw(from)) }.data;
+    let casted_object = FatPointer {
+        data: from_data_ptr,
+        vtable: meta_ent.vtable,
+    };
+    assert_eq!(
+        core::mem::size_of::<FatPointer>(),
+        core::mem::size_of::<*mut T>()
+    );
+    let new_trait_ptr = unsafe { core::mem::transmute_copy::<FatPointer, *mut T>(&casted_object) };
+    Some(unsafe { Box::from_raw(new_trait_ptr) })
 }
 
 pub use xdc_macros::*;

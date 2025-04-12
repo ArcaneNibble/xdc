@@ -72,7 +72,7 @@ fn test_const() {
     let test_as_haslocation: &dyn HasLocation = &test;
     assert_eq!(test_as_haslocation.location(), (1, 2));
     assert_eq!(test_as_haslocation.id(), 123);
-    let test_cast = xdc::try_cast!(HasColor, test_as_haslocation).unwrap();
+    let test_cast: &dyn HasColor = xdc::try_cast(test_as_haslocation).unwrap();
     assert_eq!(test_cast.color(), 3);
     assert_eq!(test_cast.id(), 123);
 }
@@ -88,7 +88,7 @@ fn test_mut() {
     let test_as_haslocation: &mut dyn HasLocation = &mut test;
     assert_eq!(test_as_haslocation.location(), (1, 2));
     assert_eq!(test_as_haslocation.id(), 123);
-    let test_cast = xdc::try_cast_mut!(HasColor, test_as_haslocation).unwrap();
+    let test_cast: &mut dyn HasColor = xdc::try_cast_mut(test_as_haslocation).unwrap();
     assert_eq!(test_cast.color(), 3);
     assert_eq!(test_cast.id(), 123);
 }
@@ -104,7 +104,7 @@ fn test_boxed() {
     let test_as_haslocation: Box<dyn HasLocation> = Box::new(test);
     assert_eq!(test_as_haslocation.location(), (1, 2));
     assert_eq!(test_as_haslocation.id(), 123);
-    let test_cast = xdc::try_cast_boxed!(HasColor, test_as_haslocation).unwrap();
+    let test_cast: Box<dyn HasColor> = xdc::try_cast_boxed(test_as_haslocation).unwrap();
     assert_eq!(test_cast.color(), 3);
     assert_eq!(test_cast.id(), 123);
 }
@@ -118,7 +118,7 @@ fn test_bad_cast() {
         col: 3,
     };
     let test_as_haslocation: &dyn HasLocation = &test;
-    let test_cast = xdc::try_cast!(HasTaste, test_as_haslocation);
+    let test_cast: Option<&dyn HasTaste> = xdc::try_cast(test_as_haslocation);
     assert!(test_cast.is_none());
 }
 
