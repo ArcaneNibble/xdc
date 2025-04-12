@@ -78,11 +78,8 @@ macro_rules! metadata_entry {
 ///
 /// ```
 /// use xdc::*;
-/// #[xdc_trait]
-/// trait Parent {}
-/// #[xdc_trait]
+/// trait Parent : ObjBase {}
 /// trait Foo : Parent {}
-/// #[xdc_trait]
 /// trait Bar : Parent {}
 /// #[xdc_struct]
 /// struct Test {}
@@ -136,11 +133,8 @@ pub fn try_cast<T: ObjBase + ?Sized + 'static>(from: &dyn ObjBase) -> Option<&T>
 ///
 /// ```
 /// use xdc::*;
-/// #[xdc_trait]
-/// trait Parent {}
-/// #[xdc_trait]
+/// trait Parent : ObjBase {}
 /// trait Foo : Parent {}
-/// #[xdc_trait]
 /// trait Bar : Parent {}
 /// #[xdc_struct]
 /// struct Test {}
@@ -192,11 +186,8 @@ pub fn try_cast_mut<T: ObjBase + ?Sized + 'static>(from: &mut dyn ObjBase) -> Op
 ///
 /// ```
 /// use xdc::*;
-/// #[xdc_trait]
-/// trait Parent {}
-/// #[xdc_trait]
+/// trait Parent : ObjBase {}
 /// trait Foo : Parent {}
-/// #[xdc_trait]
 /// trait Bar : Parent {}
 /// #[xdc_struct]
 /// struct Test {}

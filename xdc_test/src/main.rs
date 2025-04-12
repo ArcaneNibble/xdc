@@ -5,23 +5,19 @@ use std::println;
 
 use xdc::*;
 
-#[xdc_trait]
-trait HasId {
+trait HasId: ObjBase {
     fn id(&self) -> u32;
 }
 
-#[xdc_trait]
-trait HasLocation: HasId {
+trait HasLocation: ObjBase + HasId {
     fn location(&self) -> (u32, u32);
 }
 
-#[xdc_trait]
-trait HasColor: HasId {
+trait HasColor: ObjBase + HasId {
     fn color(&self) -> u32;
 }
 
-#[xdc_trait]
-trait HasTaste {
+trait HasTaste: ObjBase {
     #[allow(dead_code)]
     fn taste(&self) -> &'static str;
 }

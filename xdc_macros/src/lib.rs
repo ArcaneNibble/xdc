@@ -1,48 +1,7 @@
 extern crate proc_macro;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
-use syn::{Ident, ItemImpl, ItemStruct, ItemTrait, PathArguments, Type, TypeParamBound};
-
-/// Tag a trait with the appropriate data to allow dynamic casting to that trait
-///
-/// Implementation details: injects a `::xdc::ObjBase` bound on the trait
-///
-/// # Example
-///
-/// ```
-/// use xdc::*;
-/// #[xdc_trait]
-/// trait Foo {}
-/// ```
-#[proc_macro_attribute]
-#[proc_macro_error]
-pub fn xdc_trait(
-    _attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let input = proc_macro2::TokenStream::from(input);
-
-    let mut input_parsed = match syn::parse2::<ItemTrait>(input) {
-        Ok(x) => x,
-        Err(e) => return proc_macro::TokenStream::from(e.to_compile_error()),
-    };
-
-    if !input_parsed.generics.params.is_empty() {
-        abort!(
-            input_parsed.generics,
-            "Cannot have generics here (including const generics)"
-        )
-    }
-
-    let objbase_bound = syn::parse2::<TypeParamBound>(quote! { ::xdc::ObjBase }).unwrap();
-    input_parsed.supertraits.push(objbase_bound);
-
-    let output = quote! {
-        #input_parsed
-    };
-
-    proc_macro::TokenStream::from(output)
-}
+use syn::{Ident, ItemImpl, ItemStruct, PathArguments, Type};
 
 /// Tag a struct with the appropriate data to allow dynamic casting of that struct
 ///
@@ -107,8 +66,7 @@ pub fn xdc_struct(
 ///
 /// ```
 /// use xdc::*;
-/// #[xdc_trait]
-/// trait Bar {}
+/// trait Bar : ObjBase {}
 /// #[xdc_struct]
 /// struct Foo {}
 /// #[xdc_impl]
