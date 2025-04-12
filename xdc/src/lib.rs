@@ -40,10 +40,6 @@ pub const fn type_id<T: TypeId + ?Sized>() -> u64 {
 
 /// Base trait that will be added to all cast-able structs
 pub trait ObjBase {
-    fn to_base(self: &Self) -> &dyn ObjBase;
-    fn to_base_mut(self: &mut Self) -> &mut dyn ObjBase;
-    #[cfg(feature = "alloc")]
-    fn to_base_boxed(self: Box<Self>) -> Box<dyn ObjBase>;
     fn get_metadata(&self) -> &'static [MetadataEntry];
 }
 impl TypeId for dyn ObjBase {
@@ -145,7 +141,7 @@ pub unsafe fn try_cast<T: ObjBase + ?Sized>(from: &dyn ObjBase, typeid: u64) -> 
 #[macro_export]
 macro_rules! try_cast {
     ($type:path, $val:expr) => {{
-        let objbase = ::xdc::ObjBase::to_base($val);
+        let objbase: &dyn ::xdc::ObjBase = $val;
         let ret: Option<&dyn $type> =
             unsafe { ::xdc::try_cast(objbase, xdc::type_id::<dyn $type>()) };
         ret
@@ -222,7 +218,7 @@ pub unsafe fn try_cast_mut<T: ObjBase + ?Sized>(
 #[macro_export]
 macro_rules! try_cast_mut {
     ($type:path, $val:expr) => {{
-        let objbase = ::xdc::ObjBase::to_base_mut($val);
+        let objbase: &mut dyn ::xdc::ObjBase = $val;
         let ret: Option<&mut dyn $type> =
             unsafe { ::xdc::try_cast_mut(objbase, xdc::type_id::<dyn $type>()) };
         ret
@@ -302,7 +298,7 @@ pub unsafe fn try_cast_boxed<T: ObjBase + ?Sized>(
 #[macro_export]
 macro_rules! try_cast_boxed {
     ($type:path, $val:expr) => {{
-        let objbase = ::xdc::ObjBase::to_base_boxed($val);
+        let objbase: Box<dyn ::xdc::ObjBase> = $val;
         let ret: Option<Box<dyn $type>> =
             unsafe { ::xdc::try_cast_boxed(objbase, xdc::type_id::<dyn $type>()) };
         ret

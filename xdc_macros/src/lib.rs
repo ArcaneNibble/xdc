@@ -6,26 +6,6 @@ use syn::{Ident, ItemImpl, ItemStruct, ItemTrait, PathArguments, Type, TypeParam
 
 static NEXT_UID: AtomicU64 = AtomicU64::new(1);
 
-#[cfg(feature = "std")]
-fn std_is_enabled() -> bool {
-    true
-}
-
-#[cfg(not(feature = "std"))]
-fn std_is_enabled() -> bool {
-    false
-}
-
-#[cfg(feature = "alloc")]
-fn alloc_is_enabled() -> bool {
-    true
-}
-
-#[cfg(not(feature = "alloc"))]
-fn alloc_is_enabled() -> bool {
-    false
-}
-
 /// Tag a trait with the appropriate data to allow dynamic casting to that trait
 ///
 /// Implementation details: injects a `::xdc::TypeId` implementation for the trait object
@@ -106,22 +86,6 @@ pub fn xdc_struct(
         struct_id.span(),
     );
 
-    let alloc_impl = if std_is_enabled() {
-        quote! {
-            fn to_base_boxed(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn ::xdc::ObjBase> {
-                self
-            }
-        }
-    } else if alloc_is_enabled() {
-        quote! {
-            fn to_base_boxed(self: ::alloc::boxed::Box<Self>) -> ::alloc::boxed::Box<dyn ::xdc::ObjBase> {
-                self
-            }
-        }
-    } else {
-        quote! {}
-    };
-
     let output = quote! {
         #input_parsed
 
@@ -136,14 +100,6 @@ pub fn xdc_struct(
         static #objbase_id: ::xdc::MetadataEntry = ::xdc::metadata_entry!(#struct_id, ::xdc::ObjBase);
 
         impl ::xdc::ObjBase for #struct_id {
-            fn to_base(self: &Self) -> &dyn ::xdc::ObjBase {
-                self
-            }
-            fn to_base_mut(self: &mut Self) -> &mut dyn ::xdc::ObjBase {
-                self
-            }
-            #alloc_impl
-
             fn get_metadata(&self) -> &'static [::xdc::MetadataEntry] {
                 &#meta_id
             }
