@@ -1,5 +1,7 @@
 #![no_std]
 
+use core::any::TypeId;
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 #[cfg(feature = "alloc")]
@@ -18,38 +20,28 @@ pub struct FatPointer {
     pub data: *const u8,
     pub vtable: *const u8,
 }
-/// Trait assigned to all trait objects that can be casted by xdc
+
+/// This function is used as a workaround to get access to [TypeId] in a `const` context
 ///
-/// Ideally, we would be able to just use [core::any::TypeId], but
-/// `std::any::TypeId::of<T>` is not `const fn`
-/// ([tracking issue](https://github.com/rust-lang/rust/issues/77125)).
-/// We require `const fn` in order to make metadata tables be fully generated
-/// at compile time and embedded into the read-only section of the resulting binary.
-///
-/// Instead, we generate our own type IDs by incrementing an integer in our proc macro.
-/// This is the primary cause of potential unsafety when using xdc across multiple crates
-/// but is the simplest way of getting something working on stable.
-pub trait TypeId {
-    const TYPEID: u64;
+/// see https://github.com/rust-lang/rust/issues/77125#issuecomment-2799067806
+fn type_id_workaround<T: ?Sized + 'static>() -> TypeId {
+    TypeId::of::<T>()
 }
 
-/// Get the [TypeId] of a given type
-pub const fn type_id<T: TypeId + ?Sized>() -> u64 {
-    T::TYPEID
+/// Get a workaround for the [TypeId] of a given type
+pub const fn type_id<T: ?Sized + 'static>() -> fn() -> TypeId {
+    type_id_workaround::<T>
 }
 
 /// Base trait that will be added to all cast-able structs
 pub trait ObjBase {
     fn get_metadata(&self) -> &'static [MetadataEntry];
 }
-impl TypeId for dyn ObjBase {
-    const TYPEID: u64 = 0;
-}
 
 /// The metadata needed to allow for casting
 pub struct MetadataEntry {
     /// The id of the type this metadata represents
-    pub typeid: u64,
+    pub typeid: fn() -> TypeId,
     /// The vtable the type uses
     pub vtable: *const u8,
 }
@@ -106,10 +98,13 @@ macro_rules! metadata_entry {
 /// let bar_example: &dyn Bar = xdc::try_cast(foo_example).unwrap();
 /// ```
 ///
-pub fn try_cast<T: ObjBase + TypeId + ?Sized>(from: &dyn ObjBase) -> Option<&T> {
+pub fn try_cast<T: ObjBase + ?Sized + 'static>(from: &dyn ObjBase) -> Option<&T> {
     // look for the correct metadata entry
-    let typeid = type_id::<T>();
-    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
+    let typeid = TypeId::of::<T>();
+    let meta_ent = from
+        .get_metadata()
+        .iter()
+        .find(|x| (x.typeid)() == typeid)?;
 
     // vtable found, do transmuting
     let from_data_ptr =
@@ -161,10 +156,13 @@ pub fn try_cast<T: ObjBase + TypeId + ?Sized>(from: &dyn ObjBase) -> Option<&T> 
 /// let mut bar_example: &mut dyn Bar = xdc::try_cast_mut(foo_example).unwrap();
 /// ```
 ///
-pub fn try_cast_mut<T: ObjBase + TypeId + ?Sized>(from: &mut dyn ObjBase) -> Option<&mut T> {
+pub fn try_cast_mut<T: ObjBase + ?Sized + 'static>(from: &mut dyn ObjBase) -> Option<&mut T> {
     // look for the correct metadata entry
-    let typeid = type_id::<T>();
-    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
+    let typeid = TypeId::of::<T>();
+    let meta_ent = from
+        .get_metadata()
+        .iter()
+        .find(|x| (x.typeid)() == typeid)?;
 
     // vtable found, do transmuting
     let from_data_ptr = unsafe { core::mem::transmute::<*mut dyn ObjBase, FatPointer>(from) }.data;
@@ -215,10 +213,13 @@ pub fn try_cast_mut<T: ObjBase + TypeId + ?Sized>(from: &mut dyn ObjBase) -> Opt
 /// ```
 ///
 #[cfg(feature = "alloc")]
-pub fn try_cast_boxed<T: ObjBase + TypeId + ?Sized>(from: Box<dyn ObjBase>) -> Option<Box<T>> {
+pub fn try_cast_boxed<T: ObjBase + ?Sized + 'static>(from: Box<dyn ObjBase>) -> Option<Box<T>> {
     // look for the correct metadata entry
-    let typeid = type_id::<T>();
-    let meta_ent = from.get_metadata().iter().find(|x| x.typeid == typeid)?;
+    let typeid = TypeId::of::<T>();
+    let meta_ent = from
+        .get_metadata()
+        .iter()
+        .find(|x| (x.typeid)() == typeid)?;
 
     // vtable found, do transmuting
     let from_data_ptr =

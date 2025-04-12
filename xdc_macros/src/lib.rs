@@ -1,14 +1,11 @@
 extern crate proc_macro;
 use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
-use std::sync::atomic::{AtomicU64, Ordering};
 use syn::{Ident, ItemImpl, ItemStruct, ItemTrait, PathArguments, Type, TypeParamBound};
-
-static NEXT_UID: AtomicU64 = AtomicU64::new(1);
 
 /// Tag a trait with the appropriate data to allow dynamic casting to that trait
 ///
-/// Implementation details: injects a `::xdc::TypeId` implementation for the trait object
+/// Implementation details: injects a `::xdc::ObjBase` bound on the trait
 ///
 /// # Example
 ///
@@ -37,18 +34,11 @@ pub fn xdc_trait(
         )
     }
 
-    let trait_id = input_parsed.ident.clone();
-    let trait_uid: u64 = NEXT_UID.fetch_add(1, Ordering::SeqCst);
-
     let objbase_bound = syn::parse2::<TypeParamBound>(quote! { ::xdc::ObjBase }).unwrap();
     input_parsed.supertraits.push(objbase_bound);
 
     let output = quote! {
         #input_parsed
-
-        impl ::xdc::TypeId for dyn #trait_id {
-            const TYPEID: u64 = #trait_uid;
-        }
     };
 
     proc_macro::TokenStream::from(output)
