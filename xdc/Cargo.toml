@@ -9,11 +9,11 @@ description = "eXperimental Dynamic Casting - support library"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xdc_macros = { path = "../xdc_macros", version = "0.3", default-features = false }
 # Re-exported here to ensure downstream users don't need to depend on it
+mident = { path = "../../mident" }
 linkme = "0.3"
 
 [features]
 default = ["std"]
-alloc = ["xdc_macros/alloc"]
-std = ["alloc", "xdc_macros/std"]
+alloc = []
+std = ["alloc"]

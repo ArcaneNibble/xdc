@@ -28,7 +28,7 @@ struct Point {
     y: u32,
     col: u32,
 }
-xdc_struct_2!(Point, PointMeta, PointMetaDummy);
+xdc_struct!(Point);
 
 impl HasId for Point {
     fn id(&self) -> u32 {
@@ -36,7 +36,7 @@ impl HasId for Point {
         self.id
     }
 }
-xdc_impl_2!(HasId, Point, PointMeta, Dummy1);
+xdc_impl!(HasId, Point);
 
 impl HasLocation for Point {
     fn location(&self) -> (u32, u32) {
@@ -44,7 +44,7 @@ impl HasLocation for Point {
         (self.x, self.y)
     }
 }
-xdc_impl_2!(HasLocation, Point, PointMeta, Dummy2);
+xdc_impl!(HasLocation, Point);
 
 impl HasColor for Point {
     fn color(&self) -> u32 {
@@ -52,7 +52,7 @@ impl HasColor for Point {
         self.col
     }
 }
-xdc_impl_2!(HasColor, Point, PointMeta, Dummy3);
+xdc_impl!(HasColor, Point);
 
 #[cfg(test)]
 use alloc::boxed::Box;

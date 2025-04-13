@@ -1,3 +1,37 @@
+//! eXperimental Dynamic Casting for Rust
+//!
+//! # Example
+//!
+//! ```
+//! use xdc::*;
+//! trait Parent : ObjBase {}
+//! trait Foo : Parent {}
+//! trait Bar : Parent {}
+//!
+//! struct Test {}
+//! xdc_struct!(Test);
+//!
+//! impl Parent for Test {}
+//! xdc_impl!(Parent, Test);
+//!
+//! impl Foo for Test {}
+//! xdc_impl!(Foo, Test);
+//!
+//! impl Bar for Test {}
+//! xdc_impl!(Bar, Test);
+//!
+//! let mut example = Test {};
+//!
+//! let foo_example: &dyn Foo = &example;
+//! let bar_example: &dyn Bar = xdc::try_cast(foo_example).unwrap();
+//!
+//! let foo_example_mut: &mut dyn Foo = &mut example;
+//! let bar_example_mut: &mut dyn Bar = xdc::try_cast_mut(foo_example_mut).unwrap();
+//!
+//! let foo_example_box: Box<dyn Foo> = Box::new(example);
+//! let bar_example_box: Box<dyn Bar> = xdc::try_cast_boxed(foo_example_box).unwrap();
+//! ```
+
 #![no_std]
 
 use core::any::TypeId;
@@ -74,27 +108,6 @@ macro_rules! metadata_entry {
 ///
 /// * `from` - The object to cast
 ///
-/// # Example
-///
-/// ```
-/// use xdc::*;
-/// trait Parent : ObjBase {}
-/// trait Foo : Parent {}
-/// trait Bar : Parent {}
-/// #[xdc_struct]
-/// struct Test {}
-/// #[xdc_impl]
-/// impl Parent for Test {}
-/// #[xdc_impl]
-/// impl Foo for Test {}
-/// #[xdc_impl]
-/// impl Bar for Test {}
-///
-/// let example = Test {};
-/// let foo_example: &dyn Foo = &example;
-/// let bar_example: &dyn Bar = xdc::try_cast(foo_example).unwrap();
-/// ```
-///
 pub fn try_cast<T: ObjBase + ?Sized + 'static>(from: &dyn ObjBase) -> Option<&T> {
     // look for the correct metadata entry
     let typeid = TypeId::of::<T>();
@@ -129,27 +142,6 @@ pub fn try_cast<T: ObjBase + ?Sized + 'static>(from: &dyn ObjBase) -> Option<&T>
 ///
 /// * `from` - The object to cast
 ///
-/// # Example
-///
-/// ```
-/// use xdc::*;
-/// trait Parent : ObjBase {}
-/// trait Foo : Parent {}
-/// trait Bar : Parent {}
-/// #[xdc_struct]
-/// struct Test {}
-/// #[xdc_impl]
-/// impl Parent for Test {}
-/// #[xdc_impl]
-/// impl Foo for Test {}
-/// #[xdc_impl]
-/// impl Bar for Test {}
-///
-/// let mut example: Test = Test {};
-/// let mut foo_example: &mut dyn Foo = &mut example;
-/// let mut bar_example: &mut dyn Bar = xdc::try_cast_mut(foo_example).unwrap();
-/// ```
-///
 pub fn try_cast_mut<T: ObjBase + ?Sized + 'static>(from: &mut dyn ObjBase) -> Option<&mut T> {
     // look for the correct metadata entry
     let typeid = TypeId::of::<T>();
@@ -182,27 +174,6 @@ pub fn try_cast_mut<T: ObjBase + ?Sized + 'static>(from: &mut dyn ObjBase) -> Op
 ///
 /// * `from` - The object to cast
 ///
-/// # Example
-///
-/// ```
-/// use xdc::*;
-/// trait Parent : ObjBase {}
-/// trait Foo : Parent {}
-/// trait Bar : Parent {}
-/// #[xdc_struct]
-/// struct Test {}
-/// #[xdc_impl]
-/// impl Parent for Test {}
-/// #[xdc_impl]
-/// impl Foo for Test {}
-/// #[xdc_impl]
-/// impl Bar for Test {}
-///
-/// let example: Test = Test {};
-/// let foo_example: Box<dyn Foo> = Box::new(example);
-/// let bar_example: Box<dyn Bar> = xdc::try_cast_boxed(foo_example).unwrap();
-/// ```
-///
 #[cfg(feature = "alloc")]
 pub fn try_cast_boxed<T: ObjBase + ?Sized + 'static>(from: Box<dyn ObjBase>) -> Option<Box<T>> {
     // look for the correct metadata entry
@@ -227,10 +198,10 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized + 'static>(from: Box<dyn ObjBase>) -> 
     Some(unsafe { Box::from_raw(new_trait_ptr) })
 }
 
-pub use xdc_macros::*;
+pub use mident::mident;
 
 #[macro_export]
-macro_rules! xdc_struct_2 {
+macro_rules! xdc_struct_ {
     ($ty:path, $meta:ident, $dummy:ident) => {
         #[allow(non_upper_case_globals)]
         #[::xdc::linkme::distributed_slice]
@@ -251,11 +222,38 @@ macro_rules! xdc_struct_2 {
 }
 
 #[macro_export]
-macro_rules! xdc_impl_2 {
-    ($trait:path, $obj:path, $meta:path, $dummy:ident) => {
+macro_rules! xdc_struct {
+    ($ty:ident) => {
+        ::xdc::mident! {
+            ::xdc::xdc_struct_! {
+            $ty,
+            #concat(__ $ty _XDC_METADATA),
+            #rand
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! xdc_impl_ {
+    ($trait:path, $obj:ident, $meta:path, $dummy:ident) => {
         #[allow(non_upper_case_globals)]
         #[::xdc::linkme::distributed_slice($meta)]
         #[linkme(crate = ::xdc::linkme)]
         static $dummy: ::xdc::MetadataEntry = ::xdc::metadata_entry!($obj, $trait);
+    };
+}
+
+#[macro_export]
+macro_rules! xdc_impl {
+    ($trait:path, $obj:ident) => {
+        ::xdc::mident! {
+            ::xdc::xdc_impl_! {
+                $trait,
+                $obj,
+                #concat(__ $obj _XDC_METADATA),
+                #rand
+            }
+        }
     };
 }
