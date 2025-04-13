@@ -228,34 +228,3 @@ pub fn try_cast_boxed<T: ObjBase + ?Sized + 'static>(from: Box<dyn ObjBase>) -> 
 }
 
 pub use xdc_macros::*;
-
-#[macro_export]
-macro_rules! xdc_struct_2 {
-    ($ty:path, $meta:ident, $dummy:ident) => {
-        #[allow(non_upper_case_globals)]
-        #[::xdc::linkme::distributed_slice]
-        #[linkme(crate = ::xdc::linkme)]
-        static $meta: [::xdc::MetadataEntry] = [..];
-
-        #[allow(non_upper_case_globals)]
-        #[::xdc::linkme::distributed_slice($meta)]
-        #[linkme(crate = ::xdc::linkme)]
-        static $dummy: ::xdc::MetadataEntry = ::xdc::metadata_entry!($ty, ::xdc::ObjBase);
-
-        impl ::xdc::ObjBase for $ty {
-            fn get_metadata(&self) -> &'static [::xdc::MetadataEntry] {
-                &$meta
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! xdc_impl_2 {
-    ($trait:path, $obj:path, $meta:path, $dummy:ident) => {
-        #[allow(non_upper_case_globals)]
-        #[::xdc::linkme::distributed_slice($meta)]
-        #[linkme(crate = ::xdc::linkme)]
-        static $dummy: ::xdc::MetadataEntry = ::xdc::metadata_entry!($obj, $trait);
-    };
-}

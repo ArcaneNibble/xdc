@@ -22,37 +22,37 @@ trait HasTaste: ObjBase {
     fn taste(&self) -> &'static str;
 }
 
+#[xdc_struct]
 struct Point {
     id: u32,
     x: u32,
     y: u32,
     col: u32,
 }
-xdc_struct_2!(Point, PointMeta, PointMetaDummy);
 
+#[xdc_impl]
 impl HasId for Point {
     fn id(&self) -> u32 {
         println!("getting id {}", self.id);
         self.id
     }
 }
-xdc_impl_2!(HasId, Point, PointMeta, Dummy1);
 
+#[xdc_impl]
 impl HasLocation for Point {
     fn location(&self) -> (u32, u32) {
         println!("getting location {} {}", self.x, self.y);
         (self.x, self.y)
     }
 }
-xdc_impl_2!(HasLocation, Point, PointMeta, Dummy2);
 
+#[xdc_impl]
 impl HasColor for Point {
     fn color(&self) -> u32 {
         println!("getting color {}", self.col);
         self.col
     }
 }
-xdc_impl_2!(HasColor, Point, PointMeta, Dummy3);
 
 #[cfg(test)]
 use alloc::boxed::Box;
