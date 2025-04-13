@@ -10,7 +10,8 @@ description = "eXperimental Dynamic Casting - support library"
 
 [dependencies]
 xdc_macros = { path = "../xdc_macros", version = "0.3", default-features = false }
-linkme = "0.3" # Re-exported here to ensure downstream users don't need to depend on it
+# Re-exported here to ensure downstream users don't need to depend on it
+linkme = "0.3"
 
 [features]
 default = ["std"]
