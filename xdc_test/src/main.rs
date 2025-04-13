@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![no_std]
 extern crate alloc;
 extern crate std;
@@ -56,6 +57,13 @@ xdc_impl!(HasColor, Point);
 mod annoying {
     use crate::*;
 
+    pub trait BonusTrait<const N: usize>: ObjBase {
+        fn bonus(&self) -> usize {
+            N
+        }
+    }
+    impl<const N: usize> BonusTrait<N> for FancyTest<u32> {}
+
     pub struct FancyTest<T> {
         pub owo: T,
         pub uwu: &'static str,
@@ -81,6 +89,9 @@ mod annoying {
 xdc_struct!(annoying::FancyTest<u32>);
 xdc_struct!(annoying::FancyTest<u64>);
 xdc_impl!(HasTaste, annoying::FancyTest<u64>);
+xdc_impl!(annoying::BonusTrait<1>, annoying::FancyTest<u32>);
+xdc_impl!(annoying::BonusTrait<2>, annoying::FancyTest<u32>);
+xdc_impl!(annoying::BonusTrait<3>, annoying::FancyTest<u32>);
 
 #[cfg(test)]
 use alloc::boxed::Box;
@@ -180,6 +191,23 @@ fn test_fancy_2() {
     assert!(test_cast.is_none());
     let test_cast: Option<&dyn HasLocation> = xdc::try_cast(test_cast_1);
     assert!(test_cast.is_none());
+}
+
+#[test]
+fn test_fancy_3() {
+    use crate::annoying::BonusTrait;
+
+    let test = annoying::FancyTest {
+        owo: 123u32,
+        uwu: "sour",
+    };
+    let test_as_objbase: &dyn ObjBase = &test;
+    let test_cast_1: &dyn BonusTrait<1> = xdc::try_cast(test_as_objbase).unwrap();
+    assert_eq!(test_cast_1.bonus(), 1);
+    let test_cast_2: &dyn BonusTrait<2> = xdc::try_cast(test_cast_1).unwrap();
+    assert_eq!(test_cast_2.bonus(), 2);
+    let test_cast_3: &dyn BonusTrait<3> = xdc::try_cast(test_cast_2).unwrap();
+    assert_eq!(test_cast_3.bonus(), 3);
 }
 
 fn main() {
