@@ -223,11 +223,11 @@ macro_rules! xdc_struct_ {
 
 #[macro_export]
 macro_rules! xdc_struct {
-    ($ty:ident) => {
+    ($ty:path) => {
         ::xdc::mident! {
             ::xdc::xdc_struct_! {
             $ty,
-            #concat(__ $ty _XDC_METADATA),
+            #concat(__ #flatten_basename($ty) _XDC_METADATA),
             #rand
             }
         }
@@ -236,7 +236,7 @@ macro_rules! xdc_struct {
 
 #[macro_export]
 macro_rules! xdc_impl_ {
-    ($trait:path, $obj:ident, $meta:path, $dummy:ident) => {
+    ($trait:path, $obj:path, $meta:path, $dummy:ident) => {
         #[allow(non_upper_case_globals)]
         #[::xdc::linkme::distributed_slice($meta)]
         #[linkme(crate = ::xdc::linkme)]
@@ -246,12 +246,12 @@ macro_rules! xdc_impl_ {
 
 #[macro_export]
 macro_rules! xdc_impl {
-    ($trait:path, $obj:ident) => {
+    ($trait:path, $obj:path) => {
         ::xdc::mident! {
             ::xdc::xdc_impl_! {
                 $trait,
                 $obj,
-                #concat(__ $obj _XDC_METADATA),
+                #concat(__ #flatten_basename($obj) _XDC_METADATA),
                 #rand
             }
         }

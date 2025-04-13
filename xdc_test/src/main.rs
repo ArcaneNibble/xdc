@@ -18,7 +18,6 @@ trait HasColor: ObjBase + HasId {
 }
 
 trait HasTaste: ObjBase {
-    #[allow(dead_code)]
     fn taste(&self) -> &'static str;
 }
 
@@ -53,6 +52,35 @@ impl HasColor for Point {
     }
 }
 xdc_impl!(HasColor, Point);
+
+mod annoying {
+    use crate::*;
+
+    pub struct FancyTest<T> {
+        pub owo: T,
+        pub uwu: &'static str,
+    }
+
+    impl HasId for FancyTest<u32> {
+        fn id(&self) -> u32 {
+            self.owo
+        }
+    }
+    xdc_impl!(HasId, FancyTest<u32>);
+
+    impl<T> HasTaste for FancyTest<T>
+    where
+        FancyTest<T>: xdc::ObjBase,
+    {
+        fn taste(&self) -> &'static str {
+            self.uwu
+        }
+    }
+    xdc_impl!(HasTaste, FancyTest<u32>);
+}
+xdc_struct!(annoying::FancyTest<u32>);
+xdc_struct!(annoying::FancyTest<u64>);
+xdc_impl!(HasTaste, annoying::FancyTest<u64>);
 
 #[cfg(test)]
 use alloc::boxed::Box;
@@ -115,6 +143,42 @@ fn test_bad_cast() {
     };
     let test_as_haslocation: &dyn HasLocation = &test;
     let test_cast: Option<&dyn HasTaste> = xdc::try_cast(test_as_haslocation);
+    assert!(test_cast.is_none());
+}
+
+#[test]
+fn test_fancy_1() {
+    let test = annoying::FancyTest {
+        owo: 123u32,
+        uwu: "spicy",
+    };
+    let test_as_objbase: &dyn ObjBase = &test;
+    let test_cast_1: &dyn HasId = xdc::try_cast(test_as_objbase).unwrap();
+    assert_eq!(test_cast_1.id(), 123);
+    let test_cast_2: &dyn HasTaste = xdc::try_cast(test_cast_1).unwrap();
+    assert_eq!(test_cast_2.taste(), "spicy");
+
+    let test_cast: Option<&dyn HasColor> = xdc::try_cast(test_cast_2);
+    assert!(test_cast.is_none());
+    let test_cast: Option<&dyn HasLocation> = xdc::try_cast(test_cast_2);
+    assert!(test_cast.is_none());
+}
+
+#[test]
+fn test_fancy_2() {
+    let test = annoying::FancyTest {
+        owo: 456u64,
+        uwu: "salty",
+    };
+    let test_as_objbase: &dyn ObjBase = &test;
+    let test_cast_1: &dyn HasTaste = xdc::try_cast(test_as_objbase).unwrap();
+    assert_eq!(test_cast_1.taste(), "salty");
+
+    let test_cast: Option<&dyn HasId> = xdc::try_cast(test_cast_1);
+    assert!(test_cast.is_none());
+    let test_cast: Option<&dyn HasColor> = xdc::try_cast(test_cast_1);
+    assert!(test_cast.is_none());
+    let test_cast: Option<&dyn HasLocation> = xdc::try_cast(test_cast_1);
     assert!(test_cast.is_none());
 }
 
